@@ -15,7 +15,7 @@ TIME="Time %E (%P CPU)\nMem %Kk/%Mk (avg/max): %Xk(shared) + %Dk(data)\nI/O %I+%
 # Utility functions
 tell () {
     now=`date +"%4Y.%m.%d-%H.%M.%S"`
-    echo "${now}-sim-worker: $1"
+    echo "${now} sim-worker: $1"
 }
 
 quit () {
@@ -40,8 +40,7 @@ copyout() {
 if [ -z "$1" ]; then
     quit "ERROR! Usage: $0 input_file output_prefix [nevents=-1 [skipevents=0]]" 1
 fi
-input_file=$1
-IN_FILE="${IN_PATH}/out${N_FILE}.hepmc"
+IN_FILE="${IN_PATH}/$1"
 
 if [ -z "$2" ]; then
     quit "ERROR! Usage: $0 input_file output_prefix [nevents=-1 [skipevents=0]]" 1
@@ -51,23 +50,24 @@ OUT_FILE_PREFIX=$2
 if [ -z "$3" ]; then
     N_EVENTS_PER_JOB=-1
 else
-    N_EVENTS_PER_JOB=$2
+    N_EVENTS_PER_JOB=$3
     if [ -z "$4" ]; then
 	N_SKIP_EVENTS=0
     else
-	N_SKIP_EVENTS=$3
+	N_SKIP_EVENTS=$4
     fi
     # update output file
-    MAX_EVENT=$(( N_SKIP_EVENTS + N_EVENTS_PER_JOB ))
+    MAX_EVENT=$(( N_SKIP_EVENTS + N_EVENTS_PER_JOB - 1 ))
     OUT_FILE_PREFIX="${OUT_FILE_PREFIX}_${N_SKIP_EVENTS}-${MAX_EVENT}"
 fi
 
 
 
-tell "Using input ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})"
+tell "Input: ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})."
+tell "Output: ${OUT_FILE_PREFIX}.slcio/.log"
 
 # Run ddsim
-tell "Running ddsim..."
+tell "Running ddsim in ${RUN_PATH}..."
 mkdir -p ${RUN_PATH}
 cd ${RUN_PATH}
 

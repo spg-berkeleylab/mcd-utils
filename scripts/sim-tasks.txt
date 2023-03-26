@@ -1,6 +1,4 @@
 # example of tasks
-sim-worker.sh 0
-sim-worker.sh 1
-sim-worker.sh 2
+sim-worker.sh out2.hepmc out2 10 0
+sim-worker.sh out2.hepmc out2 10 10
 #...
-
