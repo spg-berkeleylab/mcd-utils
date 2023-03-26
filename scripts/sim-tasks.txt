@@ -1,0 +1,6 @@
+# example of tasks
+sim-worker.sh 0
+sim-worker.sh 1
+sim-worker.sh 2
+#...
+
