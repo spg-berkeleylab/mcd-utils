@@ -2,12 +2,25 @@
 #SBATCH --output=sim-slr-%j.out
 #SBATCH --error=sim-slr-%j.err
 #SBATCH --account=atlas
+#SBATCH --constraint=cpu
 #SBATCH --qos=regular
 #SBATCH --time=02:00:00
 #SBATCH --tasks-per-node=1
-#SBATCH --image=infnpd/mucoll-ilc-framework:1.6-centos8
-#SBATCH --export=SCRATCH
-#SBATCH --array=1-20
+## SBATCH --image=infnpd/mucoll-ilc-framework:1.6-centos8
+## SBATCH --export=SCRATCH
+## SBATCH --array 1 10
+
+###########
+# Submission script to slurm for sbatch
+# Usage: $0 tasklist [workdir=$PWD/wkdir [nprocesses]]
+# Notes:
+# - nprocesses by defualt is determined from the number of tasks (but max. 256)
+# - if submitting a job arrach (e.g. with --array 1-10),
+#   then tasklist is assumed to be tasklist-${SLURM_ARRAY_TASK_ID}
+###########
+
+
+# Utility functions for job handling
 
 function handle_signal
 {
@@ -17,25 +30,59 @@ function handle_signal
 }
 trap handle_signal INT USR1
 
-if [ ${#} != 1 ]; then
-    echo "usage: ${0} tasklist"
+
+# Check command-line arguments
+
+if [ ${#} != 1 ] && [ ${#} != 2 ] && [ ${#} != 3 ]; then
+    echo "usage: ${0} tasklist [workdir=$PWD/wkdir [nprocesses]]"
     exit 1
 fi
-workdir="wk-${TASKID}"
-tasklist=sim-tasks-${TASKID}.txt
-logdir=${tasklist}_logs
 
+
+# Determine tasklist and, number of parallel processes and other settings
+
+TASKID=""
+if ! [ -z "${SLURM_ARRAY_TASK_ID}" ]; then
+    TASKID="-${SLURM_ARRAY_TASK_ID}"
+fi
+tasklist="${1}${TASKID}"
+
+workdir="${PWD}/wkdir"
+if ! [ -z "$2" ]; then
+    workdir="${2}${TASKID}"
+fi
+
+N_PARALLEL_JOBS=`cat $tasklist | grep -v '^#.*$' | grep -v '^[[:blank:]]*$' | wc -l`
+if [ ${N_PARALLEL_JOBS} -gt 256 ]; then
+    # reduce to max two processes per CPU
+    N_PARALLEL_JOBS=256
+fi
+if ! [ -z "$3" ]; then
+    N_PARALLEL_JOBS=$3
+fi
+
+
+# Prepare to execute
+
+echo "$(date) About to execute on machine / cwd / arguments:"
 hostname
 uname -a
 pwd
 echo "tasklist = ${tasklist}"
+echo "proc = ${N_PARALLEL_JOBS}"
 
-${HOME}/mcgen/pytaskfarmer/pytaskfarmer.py --logDir ${logdir} --proc 32 ${tasklist} &
+#1) Run pytaskfarmer inside the container (uncomment the image option for SBATCH above)
+#   pro: run shifter only once,
+#   cons: requires recent version of python & taskfarmer available in the container
+#shifter --module=cvmfs /bin/bash -c "pytaskfarmer.py --proc ${N_PARALLEL_JOBS} --workdir ${workdir} ${tasklist}"
+
+#2) Run pytaskfarmer using a shifter runner for MCD:
+pytaskfarmer.py --proc ${N_PARALLEL_JOBS} --workdir ${workdir} --runner mcd_shifter ${tasklist}
+
 export PROCPID=${!}
+
+
+# Wait for the end of execution
+
 wait ${PROCPID}
 echo "$(date) Finish running!"
-
-#shifter --module=cvmfs /bin/bash sim-worker.sh ${TASKID}
-#shifter --module=cvmfs /bin/bash pytaskfarmer.py ${tasklist}
-${HOME}/utils/pytaskfarmer/pytaskfarmer.py --proc 32 --workdir ${workdir} --logDir ${logdir} --runner mcd-runner ${tasklist}
-
