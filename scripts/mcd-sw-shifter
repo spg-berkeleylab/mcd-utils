@@ -1,0 +1,9 @@
+# Setup muon collider docker image within shifter.
+# Images prepared with (all versions listed):
+# $ shifterimg -v pull docker:infnpd/mucoll-ilc-framework:1.6-centos8
+#
+# https://confluence.infn.it/display/muoncollider/Releases+notes
+#
+export XDG_RUNTIME_DIR="${TMPDIR:-/tmp}/`whoami`/run"
+mkdir -p ${XDG_RUNTIME_DIR}
+shifter --image=docker:infnpd/mucoll-ilc-framework:1.6-centos8 --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${HOME}/mcd-utils/scripts/bashrc_muc.sh
