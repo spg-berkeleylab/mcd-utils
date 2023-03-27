@@ -12,8 +12,8 @@ IN_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf
 OUT_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/rec"
 BIB_PATH="/data/bib/MuCollv1_25ns_nEkin150MeV_QGSPBERT/"
 
-random_postfix=`echo $RANDOM | md5sum | head -c 4`
-RUN_PATH="${SCRATCH}/muc-run-${random_postfix}" #temporary unique running path
+random_postfix=`echo $RANDOM | md5sum | head -c 6`
+RUN_PATH="${SCRATCH}/muc-recrun-${random_postfix}" #temporary unique running path
 
 CONFIG_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/rec/config"
 CONFIG_FILE="actsseedckf_steer.xml" #relative to $CONFIG_PATH

@@ -10,8 +10,8 @@
 IN_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/evt"
 OUT_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/sim"
 
-random_postfix=`echo $RANDOM | md5sum | head -c 4`
-RUN_PATH="${SCRATCH}/muc-run-${random_postfix}" #temporary unique running path
+random_postfix=`echo $RANDOM | md5sum | head -c 6`
+RUN_PATH="${SCRATCH}/muc-simrun-${random_postfix}" #temporary unique running path
 CONFIG_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/sim/config"
 
 TIME="Time %E (%P CPU)\nMem %Kk/%Mk (avg/max): %Xk(shared) + %Dk(data)\nI/O %I+%O; swaps: %W"
