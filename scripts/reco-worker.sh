@@ -15,7 +15,7 @@ BIB_PATH="/data/bib/MuCollv1_25ns_nEkin150MeV_QGSPBERT/"
 random_postfix=`echo $RANDOM | md5sum | head -c 4`
 RUN_PATH="${SCRATCH}/muc-run-${random_postfix}" #temporary unique running path
 
-CONFIG_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/reco/config"
+CONFIG_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/rec/config"
 CONFIG_FILE="actsseedckf_steer.xml" #relative to $CONFIG_PATH
 
 WORKSPACE_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/code/mcprod-hZ_wzf_3mu"
@@ -88,7 +88,7 @@ if ! [ -z "${WORKSPACE_PATH}" ]; then
     for pkglib in `find ${MYBUILD}/packages -name '*.so' -type l -o -name '*.so' -type f`; do
 	pkgname=$(basename ${pkglib})
 	tell "- ${pkgname}"
-    fi
+    done
 		  
     if ! [ -r "setup.sh" ]; then
 	quit "Workspace provided (${WORKSPACE_PATH}), but no 'setup.sh' found."
@@ -122,7 +122,7 @@ done
 tell "List of BIB links created:"
 ls -lh
 tell "--------"
-tell "BIBs list: ${BIBs}"
+tell "BIBs list: ${BIBs[*]}"
 tell "--------"
 
 
