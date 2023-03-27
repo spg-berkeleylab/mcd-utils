@@ -1,5 +1,9 @@
 ## Setup and run ddsim instance
 ## Args: input_file output_prefix [nevents=-1 [skipevents=0]]
+## Notes:
+## - provided as template and, while it might fit many use-cases, it's meant to be customized
+## - ultimately, a DDSimTaskList handler for pytaskfarmer should incorporate these functionalities and is preferred, when possible.
+
 
 # Settings
 
