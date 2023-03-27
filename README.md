@@ -32,12 +32,29 @@ git clone ssh://git@gitlab.cern.ch:7999/berkeleylab/MuonCollider/mcctaskfarmer.g
 ```
 Note: if you don't have a gitlab.cern.ch account setup with ssh keys, you might need to use the HTTPS repository instead (no authentication needed to clone/pull).
 
+To ensure this and other utilities are visible from everywhere, it is recommend to add to the `${HOME}/.bashrc` file the following line:
+```bash
+export PATH=${HOME}/mcd-utils/scripts:${PATH}
+export PYTHONPATH=${HOME}/install/lib/python3.6/site-packages/:${PYTHONPATH}
+```
+where the `PYTHONPATH` exact folder might need adjustments in the future if the default version of python changes (`python3 --version` will give you the current version).
+Then go to the `pytaskfarmer` folder and install it like this:
+```bash
+mkdir ${HOME}/install
+cd ${HOME}/pytaskfarmer
+python3 setup.py install --prefix ${HOME}/install/
+```
+You only need to install it again if you update its source code.
+
+## Perlmutter at NERSC: Daily work
+
 Every time you log in, to start the container with the muon collider software you can simply call the following script:
 ```bash
 ./mcd-utils/scripts/mcd-sw-shifter
 ```
 This command will also source the `scripts/bashrc_muc.sh` file that sets up some useful aliases, e.g. the commands `acode` and `adata` will take you to the respective CFS filesystem folders created above.
 
+Not every work needs the muon collider software. In particular, if you want to submit jobs to the underlying batch system, you should do that from the native OS and not setup the muon collider container.
 
 ## Submitting jobs
 A few utility scripts are provided to ease the job submission on the cluster:
