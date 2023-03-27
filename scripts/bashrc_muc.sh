@@ -2,7 +2,7 @@
 
 echo "Setup environment config for muon-collider image"
 
-MUC_HOME="/global/cfs/cdirs/atlas/stefanp/MuonCollider/"
+MUC_HOME="/global/cfs/cdirs/atlas/${USER}/MuonCollider/"
 alias acode="cd ${MUC_HOME}/code/"
 alias aproject='cd ${MUC_HOME}/data/'
 
