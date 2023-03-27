@@ -1,27 +1,33 @@
-## Setup and run ddsim instance
-## Args: job_number (e.g. from job array)
+## Setup and run Marlin instance
+## Args: input_file output_prefix [nevents=-1 [skipevents=0 [nBIB=10]]]
+## Notes:
+## - randomizes BIB selection; select nBIB files
+## - if a workspace folder is provided below, the environment is setup to include local packages
+## - provided as template and, while it might fit many use-cases, it's meant to be customized
+## - ultimately, a MarlinTaskList handler for pytaskfarmer should incorporate these functionalities and is preferred, when possible.
 
 # Settings
 
-IN_PATH="/home/spagan/mcprod-hZ_wzf_3mu/sim.off"
-BIB_PATH="/data/BIB/MuCollv1_25ns_nEkin150MeV_QGSPBERT/"
-OUT_PATH="/home/spagan/mcprod-hZ_wzf_3mu/out.off"
-RUN_PATH="/home/spagan/mcprod-hZ_wzf_3mu/run.off" #temporary unique running path
-N_EVENTS_PER_JOB=2
+IN_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/sim"
+OUT_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/rec"
+BIB_PATH="/data/bib/MuCollv1_25ns_nEkin150MeV_QGSPBERT/"
 
-#IN_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/......"
-#BIB_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/......"
-#OUT_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/......"
-CONFIG_PATH="${PWD}/config"
-#RUN_PATH="${SCRATCH}/....." #temporary unique running path
-#N_EVENTS_PER_JOB=100
-N_JOBS_PER_FILE=10 # events per file / N_EVENTS_PER_JOB
+random_postfix=`echo $RANDOM | md5sum | head -c 4`
+RUN_PATH="${SCRATCH}/muc-run-${random_postfix}" #temporary unique running path
+
+CONFIG_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/reco/config"
+CONFIG_FILE="actsseedckf_steer.xml" #relative to $CONFIG_PATH
+
+WORKSPACE_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/code/mcprod-hZ_wzf_3mu"
+MYBUILD="build" #build folder (either relative to $WORKSPACE_PATH or absolute path
+
 TIME="Time %E (%P CPU)\nMem %Kk/%Mk (avg/max): %Xk(shared) + %Dk(data)\nI/O %I+%O; swaps: %W"
+
 
 # Utility functions
 tell () {
     now=`date +"%4Y.%m.%d-%H.%M.%S"`
-    echo "${now}-sim-worker: $1"
+    echo "${now} reco-worker: $1"
 }
 
 quit () {
@@ -44,34 +50,68 @@ copyout() {
 
 # Determine input file and events
 if [ -z "$1" ]; then
-    quit "ERROR! Need a job_number as argument." 1
+    quit "ERROR! Usage: $0 input_file output_prefix [nevents=-1 [skipevents=0 [nBIB=10]]]" 1
 fi
-IDX=$1
-tell "Starting job $IDX"
+IN_FILE="${IN_PATH}/$1"
 
-N_JOB=$(( $IDX % ${N_JOBS_PER_FILE} ))
-N_FILE=$(( $IDX / ${N_JOBS_PER_FILE} + 1  ))
-IN_FILE="${IN_PATH}/sim-${N_FILE}.slcio"
-N_SKIP_EVENTS=$(( ${N_JOB} * ${N_EVENTS_PER_JOB} ))
-OUT_FILE_PREFIX="./reco-${IDX}"
+if [ -z "$2" ]; then
+    quit "ERROR! Usage: $0 input_file output_prefix [nevents=-1 [skipevents=0 [nBIB=10]]]" 1
+fi
+OUT_FILE_PREFIX=$2
 
 
-tell "Using input ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})"
+N_EVENTS_PER_JOB=-1
+MAX_MARLIN_RECORD=-1 #to adapt to the way Marlin input processor sets nEvents
+if ! [ -z "$3" ]; then
+    N_EVENTS_PER_JOB=$3
+    MAX_MARLIN_RECORD=$((N_EVENTS_PER_JOB + 1))
+    
+    N_SKIP_EVENTS=0
+    if ! [ -z "$4" ]; then
+	N_SKIP_EVENTS=$4
+    fi
+    # update output file
+    MAX_EVENT=$(( N_SKIP_EVENTS + N_EVENTS_PER_JOB - 1 ))
+    OUT_FILE_PREFIX="${OUT_FILE_PREFIX}_${N_SKIP_EVENTS}-${MAX_EVENT}"
+fi
+
+
+
+tell "Input: ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})."
+tell "Output: ${OUT_FILE_PREFIX}.slcio/.log"
 
 # Prepare and run Marlin
+if ! [ -z "${WORKSPACE_PATH}" ]; then
+    tell "Setting up workspace environment"
+    cd ${WORKSPACE_PATH}    
+    tell "Local packages:"
+    for pkglib in `find ${MYBUILD}/packages -name '*.so' -type l -o -name '*.so' -type f`; do
+	pkgname=$(basename ${pkglib})
+	tell "- ${pkgname}"
+    fi
+		  
+    if ! [ -r "setup.sh" ]; then
+	quit "Workspace provided (${WORKSPACE_PATH}), but no 'setup.sh' found."
+    fi
+    source setup.sh $MYBUILD
+    echo "MARLIN_DLL=${MARLIN_DLL}"
+fi
+
 tell "Preparing to run"
 mkdir -p ${RUN_PATH}
 cd ${RUN_PATH}
 
-cp -r ${CONFIG_PATH}/...... #TODO, copy whole config
+cp -r ${CONFIG_PATH}/* . #copy the whole config (e.g. Pandora wants it run-time there)
 
 tell "Randomizing BIB selection"
+NBIBs=10
+if ! [ -z "$5" ]; then
+    NBIBs=$5
+fi
 BKGPre="sim_mumu-1e3x500-26m-lowth-excl_seed"
 BKGPost="_allHits.slcio"
 BKGTot=1000
-NBIBs=10
 BIBs=()
-#for i in {1..${NBIBs}}; do
 for (( i=1; i<=${NBIBs}; i++ )); do
   RNDBKG=$(printf "%04d" $(($RANDOM % $BKGTot)) )
   BKGFILE=${BKGPre}${RNDBKG}${BKGPost}
@@ -87,10 +127,9 @@ tell "--------"
 
 
 tell "Running Marlin..."
-shopt -s expand_aliases
 source /opt/ilcsoft/muonc/init_ilcsoft.sh
 #/usr/bin/time --format="${TIME}" --
-echo time Marlin --global.LCIOInputFiles=${IN_FILE} --global.MaxRecordNumber=${N_EVENTS_PER_JOB} --global.SkipNEvents=${N_SKIP_EVENTS} --OverlayTrimmed.BackgroundFileNames="${BIBs[*]}"  actsseedckf_steer.xml &> ${OUT_FILE_PREFIX}.log
+time Marlin --global.LCIOInputFiles=${IN_FILE} --global.MaxRecordNumber=${MAX_MARLIN_RECORD} --global.SkipNEvents=${N_SKIP_EVENTS} --OverlayTrimmed.BackgroundFileNames="${BIBs[*]}"  ${CONFIG_FILE} &> ${OUT_FILE_PREFIX}.log
 
 tell "Marlin DONE."
 
