@@ -2,11 +2,11 @@
 # Generate and print to screen the task list for a given input prefix ($1) and output prefix ($2).
 # Arguments: $0 in_prefix out_prefix [n_events_per_job n_events_per_file n_events_input [worker_script]]
 # Assumes:
-# - input in files with format prefix_XXXX-YYYY.slcio, indicating that the file contains events from #XXXX to event number #YYYY
+# - input in files with format ${in_prefix}_XXXX-YYYY.slcio, indicating that the file contains events from #XXXX to event number #YYYY
 # Notes:
 # - you can further split longer lists as in the example that follows:
-#   split -l 50 -a 3 --numeric-suffixes=1 tmp-tasks.txt tmp-tasks-
-#   that generates smaller lists of 50 tasks per file called tmp-tasks-XXX.
+#   split -l 50 -a 3 --numeric-suffixes=1 my-tasks.txt my-tasks-
+#   that generates smaller lists of 50 tasks per file called my-tasks-XXX.
 
 in_prefix=$1 #input prefix (e.g. out1 for out1_XXXX-YYYY.slcio inputs)
 out_prefix=$2 #output prefix (output files: ${out_prefix}_XXXX-YYYY_WWWW-ZZZZ.slcio, where (XXXX+WWWW)-(XXXX+ZZZZ) is the range of events processed

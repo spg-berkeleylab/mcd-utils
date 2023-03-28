@@ -16,7 +16,7 @@
 # Notes:
 # - nprocesses by defualt is determined from the number of tasks (but max. 256)
 # - if submitting a job arrach (e.g. with --array 1-10),
-#   then tasklist is assumed to be tasklist-XXX,
+#   then tasklist is assumed to be tasklistXXX,
 #   where XXX is the 3-digits zero-padded ${SLURM_ARRAY_TASK_ID}
 ###########
 
@@ -45,7 +45,6 @@ fi
 TASKID=""
 if ! [ -z "${SLURM_ARRAY_TASK_ID}" ]; then
     printf -v TASKID "%03d" ${SLURM_ARRAY_TASK_ID}
-    TASKID="-${TASKID}"
 fi
 tasklist="${1}${TASKID}"
 
