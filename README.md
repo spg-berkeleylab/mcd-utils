@@ -65,6 +65,8 @@ This command will also source the `scripts/bashrc_muc.sh` file that sets up some
 
 Not every work needs the muon collider software. In particular, if you want to submit jobs to the underlying batch system, you should do that from the native OS and not setup the muon collider container.
 
+Any aliases used inside the container should be added to scripts/bashrc_muc.sh.
+
 ## Submitting jobs to the cluster
 Perlmutter uses (slurm)[https://docs.nersc.gov/jobs/] as batch system manager for job submission and monitoring.
 
