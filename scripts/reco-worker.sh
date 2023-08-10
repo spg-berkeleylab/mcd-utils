@@ -74,7 +74,9 @@ if ! [ -z "$3" ]; then
     MAX_EVENT=$(( N_SKIP_EVENTS + N_EVENTS_PER_JOB - 1 ))
     OUT_FILE_PREFIX="${OUT_FILE_PREFIX}_${N_SKIP_EVENTS}-${MAX_EVENT}"
 fi
-
+else
+    source /opt/ilcsoft/muonc/init_ilcsoft.sh
+fi
 
 
 tell "Input: ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})."
@@ -127,7 +129,7 @@ tell "--------"
 
 
 tell "Running Marlin..."
-source /opt/ilcsoft/muonc/init_ilcsoft.sh
+#source /opt/ilcsoft/muonc/init_ilcsoft.sh
 #/usr/bin/time --format="${TIME}" --
 time Marlin --global.LCIOInputFiles=${IN_FILE} --global.MaxRecordNumber=${MAX_MARLIN_RECORD} --global.SkipNEvents=${N_SKIP_EVENTS} --OverlayTrimmed.BackgroundFileNames="${BIBs[*]}"  ${CONFIG_FILE} &> ${OUT_FILE_PREFIX}.log
 
