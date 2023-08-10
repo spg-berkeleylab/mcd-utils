@@ -47,6 +47,14 @@ python3 setup.py install --prefix ${HOME}/install/
 ```
 You only need to install it again if you update its source code. You can also install the `mcctaskfarmer` repository simiarily.
 
+Pytaskfarmer utilizes a runner script to run jobs inside the software container. The runner file must be placed in ~/.pytaskfarmer/runners.d 
+Copy the runner file into this directory:
+```bash
+mkdir ${HOME}/.pytaskfarmer
+mkdir ${HOME}/.pytaskfarmer/runners.d
+cp ${HOME}/mcd-utils/other/mcd-runner.ini ${HOME}/.pytaskfarmer/runners.d
+```
+
 ## Perlmutter at NERSC: Daily work
 
 Every time you log in, to start the container with the muon collider software you can simply call the following script:
