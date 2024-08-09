@@ -2,9 +2,10 @@
 # Images prepared with (all versions listed):
 # $ shifterimg -v pull docker:infnpd/mucoll-ilc-framework:1.7-almalinux9
 # $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
+# $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
 #
 # https://confluence.infn.it/display/muoncollider/Releases+notes
 #
 export XDG_RUNTIME_DIR="${TMPDIR:-/tmp}/`whoami`/run"
 mkdir -p ${XDG_RUNTIME_DIR}
-shifter --image=docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9 --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${HOME}/mcd-utils/scripts/bashrc_muc.sh
+shifter --image=docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9 --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${HOME}/mcd-utils/scripts/bashrc_muc.sh
