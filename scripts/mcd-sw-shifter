@@ -2,7 +2,7 @@
 # Images prepared with (all versions listed):
 # $ shifterimg -v pull docker:infnpd/mucoll-ilc-framework:1.7-almalinux9
 # $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
-# $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
+# $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9
 #
 # https://confluence.infn.it/display/muoncollider/Releases+notes
 #
