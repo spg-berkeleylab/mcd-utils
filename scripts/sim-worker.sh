@@ -4,11 +4,12 @@
 ## - provided as template and, while it might fit many use-cases, it's meant to be customized
 ## - ultimately, a DDSimTaskList handler for pytaskfarmer should incorporate these functionalities and is preferred, when possible.
 
-
 # Settings
 
-IN_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/evt"
-OUT_PATH="/global/cfs/cdirs/atlas/spgriso/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/sim"
+USERNAME="rbgarg"
+
+IN_PATH="/global/cfs/cdirs/atlas/${USERNAME}/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/evt"
+OUT_PATH="/global/cfs/cdirs/atlas/${USERNAME}/MuonCollider/data/samples/mcprod-hZ_wzf_3mu/sim"
 
 random_postfix=`echo $RANDOM | md5sum | head -c 6`
 RUN_PATH="${SCRATCH}/muc-simrun-${random_postfix}" #temporary unique running path
@@ -64,8 +65,6 @@ else
     MAX_EVENT=$(( N_SKIP_EVENTS + N_EVENTS_PER_JOB - 1 ))
     OUT_FILE_PREFIX="${OUT_FILE_PREFIX}_${N_SKIP_EVENTS}-${MAX_EVENT}"
 fi
-
-
 
 tell "Input: ${IN_FILE} (start evt: ${N_SKIP_EVENTS}, n. evt: ${N_EVENTS_PER_JOB})."
 tell "Output: ${OUT_FILE_PREFIX}.slcio/.log"

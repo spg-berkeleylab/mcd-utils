@@ -1,0 +1,13 @@
+# Setup muon collider docker image within shifter.
+# Images prepared with (all versions listed):
+# $ shifterimg -v pull docker:infnpd/mucoll-ilc-framework:1.7-almalinux9
+# $ shifterimg -v pull docker:gitlab-registry.cern.ch/kkrizka/muoncollider-docker/mucoll-sim:key4hep-devtools-alma9
+#
+# https://confluence.infn.it/display/muoncollider/Releases+notes
+#
+export XDG_RUNTIME_DIR="${TMPDIR:-/tmp}/`whoami`/run"
+mkdir -p ${XDG_RUNTIME_DIR}
+
+UTILS_DIR="/global/cfs/cdirs/atlas/rbgarg/mcd-utils"
+
+shifter --image=docker:gitlab-registry.cern.ch/kkrizka/muoncollider-docker/mucoll-sim:key4hep-devtools-alma9 --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${UTILS_DIR}/scripts/bashrc_muc.sh
