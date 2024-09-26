@@ -1,11 +1,58 @@
 # Setup muon collider docker image within shifter.
-# Images prepared with (all versions listed):
-# $ shifterimg -v pull docker:infnpd/mucoll-ilc-framework:1.7-almalinux9
-# $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
+# Images prepared with (all versions listed), and they're short-description that can be used to set them up:
+# 2.8 -- docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
+# 2.9 (default) -- docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.9-alma9
+# main -- docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9
+#
+# Deprecated images (not supported anymore):
+# 1.7 -- docker:infnpd/mucoll-ilc-framework:1.7-almalinux9
+#
+# Any new image needs to be pulled once (just from one user), using e.g.:
 # $ shifterimg -v pull docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9
 #
-# https://confluence.infn.it/display/muoncollider/Releases+notes
-#
+
+usage() {
+   echo "$0 [version]"
+   echo "Supported list for argument versions:"
+   echo "- 2.8"
+   echo "- 2.9 (default)"
+   echo "- main"
+   echo
+}
+
+
+IMAGE_SHORT="2.9" ## default
+IMAGE=""
+if ! [ -z "$1" ]; then
+   if [ "$1" == "-h"] || [ "$1" == "--help" ]; then
+      usage()
+      exit()
+   else
+      IMAGE_SHORT="$1"
+   fi
+fi
+
+case "$1" in
+   "2.8")
+      IMAGE_SHORT="2.8"
+      IMAGE="docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9"
+      ;;
+   "2.9")
+      IMAGE_SHORT="2.9"
+      IMAGE="docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.9-alma9"
+      ;;
+   "main")
+      IMAGE_SHORT="main"
+      IMAGE="docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9"
+      ;;
+   *)
+      echo "ERROR: Invalid image short-name as argument."
+      usage()
+      exit()
+      ;;
+esac
+
 export XDG_RUNTIME_DIR="${TMPDIR:-/tmp}/`whoami`/run"
 mkdir -p ${XDG_RUNTIME_DIR}
-shifter --image=docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9 --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${HOME}/mcd-utils/scripts/bashrc_muc.sh
+echo "Starting muon collider software image ${IMAGE_SHORT}"
+shifter --image=${IMAGE} --volume=/global/cfs/cdirs/atlas/spgriso/MuonCollider/data:/data -- /bin/bash --init-file ${HOME}/mcd-utils/scripts/bashrc_muc.sh
