@@ -12,7 +12,7 @@
 #
 
 usage() {
-   echo "$0 [version]"
+   echo "Usage: $0 [version]"
    echo "Supported list for argument versions:"
    echo "- 2.8"
    echo "- 2.9 (default)"
@@ -24,15 +24,15 @@ usage() {
 IMAGE_SHORT="2.9" ## default
 IMAGE=""
 if ! [ -z "$1" ]; then
-   if [ "$1" == "-h"] || [ "$1" == "--help" ]; then
-      usage()
-      exit()
+   if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+      usage
+      exit 1
    else
       IMAGE_SHORT="$1"
    fi
 fi
 
-case "$1" in
+case ${IMAGE_SHORT} in
    "2.8")
       IMAGE_SHORT="2.8"
       IMAGE="docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9"
@@ -47,8 +47,8 @@ case "$1" in
       ;;
    *)
       echo "ERROR: Invalid image short-name as argument."
-      usage()
-      exit()
+      usage
+      exit 2
       ;;
 esac
 
