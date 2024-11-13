@@ -21,4 +21,5 @@ fi
 # Setup ILC software
 #source /opt/ilcsoft/init_ilcsoft.sh
 #source /opt/ilcsoft/muonc/init_ilcsoft.sh
+source /opt/setup_spack.sh
 source /opt/setup_mucoll.sh
