@@ -47,6 +47,14 @@ python3 setup.py install --prefix ${HOME}/install/
 ```
 You only need to install it again if you update its source code. You can also install the `mcctaskfarmer` repository simiarily.
 
+Pytaskfarmer utilizes a runner script to run jobs inside the software container. The runner file must be placed in ~/.pytaskfarmer/runners.d 
+Copy the runner file into this directory:
+```bash
+mkdir ${HOME}/.pytaskfarmer
+mkdir ${HOME}/.pytaskfarmer/runners.d
+cp ${HOME}/mcd-utils/other/mcd-runner.ini ${HOME}/.pytaskfarmer/runners.d
+```
+
 ## Perlmutter at NERSC: Daily work
 
 Every time you log in, to start the container with the muon collider software you can simply call the following script:
@@ -56,6 +64,8 @@ Every time you log in, to start the container with the muon collider software yo
 This command will also source the `scripts/bashrc_muc.sh` file that sets up some useful aliases, e.g. the commands `acode` and `adata` will take you to the respective CFS filesystem folders created above.
 
 Not every work needs the muon collider software. In particular, if you want to submit jobs to the underlying batch system, you should do that from the native OS and not setup the muon collider container.
+
+Any aliases used inside the container should be added to scripts/bashrc_muc.sh.
 
 ## Submitting jobs to the cluster
 Perlmutter uses (slurm)[https://docs.nersc.gov/jobs/] as batch system manager for job submission and monitoring.
