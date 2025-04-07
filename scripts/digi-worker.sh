@@ -112,39 +112,10 @@ if ! [ -z "$5" ]; then
     NBIBs=$5
 fi
 
-BKGPre="BIB_sim_"
-BKGPost=".slcio"
-BKGTot=768
-BIBs_MUP_DIR=${RUN_PATH}"/BIB_muplus"
-mkdir -p ${BIBs_MUP_DIR}
-cd ${BIBs_MUP_DIR}
-for (( i=1; i<=${NBIBs}; i++ )); do
-  RNDBKG=$(printf "%d" $(($RANDOM % $BKGTot)) )
-  BKGFILE=${BKGPre}${RNDBKG}${BKGPost}
-  BIBFILE=BKG_MUPLUS_seed${RNDBKG}.slcio  
-  ln -s ${BIB_MUPLUS_PATH}/$BKGFILE $BIBFILE #soft-link
-done
-tell "List of BIB links for MUPLUS created inside ${BIBs_MUP_DIR}:"
-ls -lh .
-cd ${RUN_PATH}
-
-BIBs_MUM_DIR=${RUN_PATH}"/BIB_muminus"
-mkdir -p ${BIBs_MUM_DIR}
-cd ${BIBs_MUM_DIR}
-for (( i=1; i<=${NBIBs}; i++ )); do
-  RNDBKG=$(printf "%d" $(($RANDOM % $BKGTot)) )
-  BKGFILE=${BKGPre}${RNDBKG}${BKGPost}
-  BIBFILE=BKG_MUMINUS_seed${RNDBKG}.slcio
-  ln -s ${BIB_MUMINUS_PATH}/$BKGFILE $BIBFILE #soft-link                                                                                                                                
-done
-tell "List of BIB links for MUMINUS created inside ${BIBs_MUM_DIR}:"
-ls -lh .
-cd ${RUN_PATH}
-
 tell "Running k4run..."
 #/usr/bin/time --format="${TIME}" --
 
-k4run --num-events ${N_EVENTS_PER_JOB} ${CONFIG_FILE} --DD4hepXMLFile ${GEO_CONFIG} --LcioEvent.Files ${IN_FILE} --doOverlayFull --OverlayFullPathToMuPlus "${BIBs_MUP_DIR}" --OverlayFullPathToMuMinus "${BIBs_MUM_DIR}" --OverlayFullNumberBackground ${NBIBs} &> ${OUT_FILE_PREFIX}.log
+k4run --num-events ${N_EVENTS_PER_JOB} ${CONFIG_FILE} --DD4hepXMLFile ${GEO_CONFIG} --LcioEvent.Files ${IN_FILE} --doOverlayFull --OverlayFullPathToMuPlus "${BIB_MUPLUS_DIR}" --OverlayFullPathToMuMinus "${BIB_MUMINUS_PATH}" --OverlayFullNumberBackground ${NBIBs} &> ${OUT_FILE_PREFIX}.log
 # --global.SkipNEvents=${N_SKIP_EVENTS}
 tell "k4run DONE."
 
