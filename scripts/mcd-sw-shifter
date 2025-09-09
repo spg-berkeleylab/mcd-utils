@@ -16,6 +16,7 @@ usage() {
    echo "Supported list for argument versions:"
    echo "- 2.8"
    echo "- 2.9 (default)"
+   echo "- 2.9.7 (New MAIA)"
    echo "- main"
    echo
 }
@@ -40,6 +41,10 @@ case ${IMAGE_SHORT} in
    "2.9")
       IMAGE_SHORT="2.9"
       IMAGE="docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.9-alma9"
+      ;;
+   "2.9.7")
+      IMAGE_SHORT="2.9.7"
+      IMAGE="docker:ghcr.io/muoncollidersoft/mucoll-sim-alma9:v2.9.7"
       ;;
    "main")
       IMAGE_SHORT="main"
