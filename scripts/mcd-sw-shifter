@@ -1,7 +1,8 @@
 # Setup muon collider docker image within shifter.
 # Images prepared with (all versions listed), and they're short-description that can be used to set them up:
 # 2.8 -- docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.8-patch2-el9
-# 2.9 (default) -- docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.9-alma9
+# 2.9 -- docker:gitlab-registry.cern.ch/muon-collider/mucoll-deploy/mucoll:2.9-alma9
+# 2.9.7 (default) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-alma9:v2.9.7 
 # main -- docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9
 #
 # Deprecated images (not supported anymore):
@@ -15,14 +16,14 @@ usage() {
    echo "Usage: $0 [version]"
    echo "Supported list for argument versions:"
    echo "- 2.8"
-   echo "- 2.9 (default)"
-   echo "- 2.9.7 (New MAIA)"
+   echo "- 2.9"
+   echo "- 2.9.7 (default)"
    echo "- main"
    echo
 }
 
 
-IMAGE_SHORT="2.9" ## default
+IMAGE_SHORT="2.9.7" ## default
 IMAGE=""
 if ! [ -z "$1" ]; then
    if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
