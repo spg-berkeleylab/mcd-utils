@@ -1,14 +1,11 @@
 import ROOT
+import numpy as np
 from ROOT import TMVA, TFile, TH1F
+from sklearn.metrics import roc_curve, auc
 from array import array
 
-# -------------------------------------------------------------
-# Initialize TMVA reader
-# -------------------------------------------------------------
-TMVA.Tools.Instance()
-reader = TMVA.Reader("!Color:!Silent")
-
-# Define input variables (same as training)
+ROOT.TMVA.Tools.Instance()
+reader = ROOT.TMVA.Reader("!Color:Silent")
 variables = [
     "Cluster_ArrivalTime",
     "Cluster_EnergyDeposited",
@@ -20,103 +17,89 @@ variables = [
     "Cluster_y",
     "Cluster_z"
 ]
+for i in range(9):
+    variables.append(f"PixelHits_EnergyDeposited_{i}")
+    variables.append(f"PixelHits_ArrivalTime_{i}")
 
-# Create float containers
-var_dict = {v: array('f', [0.]) for v in variables}
+buffers = {v: array('f', [0.]) for v in variables}
 for v in variables:
-    reader.AddVariable(v, var_dict[v])
+    reader.AddVariable(v, buffers[v])
 
-# Load trained weights
 reader.BookMVA("BDT", "dataset/weights/TMVAClassification_BDT.weights.xml")
 
-# -------------------------------------------------------------
-# Load signal and background trees
-# -------------------------------------------------------------
 sig_file = TFile("Inputs/Signal/Hits_TTree_eval.root")
 bkg_file = TFile("Inputs/Background/Hits_TTree_eval.root")
 sig_tree = sig_file.Get("HitTree")
 bkg_tree = bkg_file.Get("HitTree")
 
-# -------------------------------------------------------------
-# Helper function: evaluate per object
-# -------------------------------------------------------------
-def evaluate_objects(tree, hist, label):
-    n_events = tree.GetEntries()
-    print(f"Evaluating {label} sample ({n_events} events)...")
-    n_objects_total = 0
-    for ev in range(n_events):
-        tree.GetEntry(ev)
-        # all vectors have same size for this event
-        n_objects = len(getattr(tree, variables[0]))
-        n_objects_total += n_objects
-        for i in range(n_objects):
-            for var in variables:
-                vec = getattr(tree, var)
-                var_dict[var][0] = float(vec[i])
-            score = reader.EvaluateMVA("BDT")
-            hist.Fill(score)
-    print(f"  → processed {n_objects_total} objects total.")
 
-# -------------------------------------------------------------
-# Create output ROOT file and histograms
-# -------------------------------------------------------------
-output_file = TFile("TMVA_ObjectEvaluation.root", "RECREATE")
-h_sig = TH1F("h_BDT_signal", "BDT Response;BDT score;Objects (normalized)", 50, -1, 1)
-h_bkg = TH1F("h_BDT_background", "BDT Response;BDT score;Objects (normalized)", 50, -1, 1)
+out_file = ROOT.TFile("BDT_Eval.root", "RECREATE")
+out_file.cd()
 
-evaluate_objects(sig_tree, h_sig, "signal")
-evaluate_objects(bkg_tree, h_bkg, "background")
+def evaluate_flat_tree(flat_tree, scores_list):
+    for evt in flat_tree:
+        for v in variables:
+            buffers[v][0] = getattr(evt, v)
+        score = reader.EvaluateMVA("BDT")
+        scores_list.append(score)
 
-# Normalize for comparison
-if h_sig.Integral() > 0:
-    h_sig.Scale(1.0 / h_sig.Integral())
-if h_bkg.Integral() > 0:
-    h_bkg.Scale(1.0 / h_bkg.Integral())
+# Evaluate signal and background
+sig_scores = []
+bkg_scores = []
+evaluate_flat_tree(sig_tree, sig_scores)
+evaluate_flat_tree(bkg_tree, bkg_scores)
 
-# -------------------------------------------------------------
-# Draw histograms
-# -------------------------------------------------------------
-c1 = ROOT.TCanvas("c1", "BDT Object Evaluation", 800, 600)
-h_sig.SetLineColor(ROOT.kRed)
-h_sig.SetLineWidth(2)
-h_bkg.SetLineColor(ROOT.kBlue)
-h_bkg.SetLineWidth(2)
-h_sig.Draw("hist")
-h_bkg.Draw("hist same")
-h_sig.SetStats(0)
+y_true = np.array([1]*len(sig_scores) + [0]*len(bkg_scores))
+y_score = np.array(sig_scores + bkg_scores)
+fpr, tpr, _ = roc_curve(y_true, y_score)
+bkg_rejection = 1 - fpr
+sig_efficiency = tpr
+roc_auc = auc(sig_efficiency, bkg_rejection)
+print(f"ROC AUC (Signal efficiency vs Background rejection) = {roc_auc:.3f}")
 
-legend = ROOT.TLegend(0.65, 0.75, 0.88, 0.88)
-legend.AddEntry(h_sig, "Signal clusters", "l")
-legend.AddEntry(h_bkg, "Background clusters", "l")
+# --- Save score histograms and ROC ---
+hSig = ROOT.TH1F("hSigScore", "Signal BDT Output;BDT Score;Entries", 100, -1, 1)
+for s in sig_scores:
+    hSig.Fill(s)
+hSig.Scale(1./hSig.Integral())
+
+hBkg = ROOT.TH1F("hBkgScore", "Background BDT Output;BDT Score;Entries", 100, -1, 1)
+for b in bkg_scores:
+    hBkg.Fill(b)
+hBkg.Scale(1./hBkg.Integral())
+
+c1 = ROOT.TCanvas("c1", "BDT Output", 800, 600)
+hSig.SetLineColor(ROOT.kRed)
+hBkg.SetLineColor(ROOT.kBlue)
+hSig.SetLineWidth(2)
+hBkg.SetLineWidth(2)
+hSig.Draw("HIST")
+hBkg.Draw("HIST SAME")
+hSig.SetStats(0)
+
+legend = ROOT.TLegend(0.7, 0.75, 0.9, 0.9)
+legend.AddEntry(hSig, "Signal clusters", "l")
+legend.AddEntry(hBkg, "Background clusters", "l")
 legend.Draw()
 
+c1.SaveAs("BDT_Evaluation_wpixels.png")
 c1.Write()
-c1.SaveAs("BDT_ObjectResponse_Comparison.png")
 
-# ROC Curve                                                                                                                                                                                  
-sig_eff = []
-bkg_eff = []
-n_bins = h_sig.GetNbinsX()
+c2 = ROOT.TCanvas("c2", "ROC Curve (Signal Eff vs Background Rejection)", 600, 600)
+g = ROOT.TGraph(len(sig_efficiency), array('f', bkg_rejection), array('f', sig_efficiency))
 
-for i in range(n_bins):
-    sig_int = h_sig.Integral(i+1, n_bins)
-    bkg_int = h_bkg.Integral(i+1, n_bins)
-    sig_eff.append(sig_int)
-    bkg_eff.append(1-bkg_int)
+g.SetTitle(f"ROC Curve;Background Rejection;Signal Efficiency")
+g.SetLineColor(ROOT.kBlue)
+g.SetLineWidth(2)
+g.Draw("AL")
+g.GetXaxis().SetLimits(0, 1)
+g.GetYaxis().SetRangeUser(0, 1)
 
-# Draw ROC curve                                                                                                                                                                             
-roc = ROOT.TGraph(len(sig_eff), array('f', bkg_eff), array('f', sig_eff))
-roc.SetTitle("ROC Curve;Background Rejection;Signal Efficiency")
-roc.SetLineWidth(2)
-roc.SetLineColor(ROOT.kGreen+2)
+c2.SaveAs("BDT_ROC_SigEff_vs_BkgRej_wpixels.png")
+g.Write("ROC_curve")
 
-c2 = ROOT.TCanvas("c2", "ROC", 600, 600)
-roc.Draw("AL")
-c2.SaveAs("bdt_roc_curve.png")
+# Write all to output file
+hSig.Write()
+hBkg.Write()
 
-roc.Write("ROC_curve")
-
-output_file.Write()
-output_file.Close()
-print("Object-level BDT evaluation complete.")
-print("Results saved to 'TMVA_ObjectEvaluation.root' and 'BDT_ObjectResponse_Comparison.png'")
+out_file.Close()
