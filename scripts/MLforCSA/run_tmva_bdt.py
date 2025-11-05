@@ -21,6 +21,12 @@ variables = [
     "Cluster_x",
     "Cluster_y",
     "Cluster_z",
+    "Cluster_RMS_x",
+    "Cluster_RMS_y",
+    "Cluster_Skew_x",
+    "Cluster_Skew_y",
+    "Cluster_AspectRatio",
+    "Cluster_Eccentricity"
 ]
 
 for v in variables:

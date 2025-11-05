@@ -15,7 +15,13 @@ variables = [
     "Cluster_Size_tot",
     "Cluster_x",
     "Cluster_y",
-    "Cluster_z"
+    "Cluster_z",
+    "Cluster_RMS_x",
+    "Cluster_RMS_y",
+    "Cluster_Skew_x",
+    "Cluster_Skew_y",
+    "Cluster_AspectRatio",
+    "Cluster_Eccentricity"
 ]
 for i in range(9):
     variables.append(f"PixelHits_EnergyDeposited_{i}")

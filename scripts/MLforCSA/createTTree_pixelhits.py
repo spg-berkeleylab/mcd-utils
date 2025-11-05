@@ -24,6 +24,63 @@ def options():
     )
     return parser.parse_args()
 
+def get_RMS(cluster_pos, pxlhits, axis = ""):
+    rms = 0.
+    sum_num = 0.
+    sum_den = 0.
+    local = 0.
+    
+    for i in range(0, len(pxlhits)):
+        hitConstituent = pxlhits[i]
+        localPos = hitConstituent.getPosition()
+        if axis=="x":
+            local = localPos[0]
+        else:
+            local = localPos[1]
+        sum_num = sum_num + pxlhits[i].getEDep()*((cluster_pos-local)**2)
+        sum_den = sum_den + pxlhits[i].getEDep()
+
+    rms = (sum_num/sum_den)
+    return rms
+
+def get_cov(cluster_posx, cluster_posy, pxlhits):
+    cov = 0.
+    sum_num = 0.
+    sum_den = 0.
+    localx = 0.
+    localy = 0.
+    
+    for i in range(0, len(pxlhits)):
+        hitConstituent = pxlhits[i]
+        localPos = hitConstituent.getPosition()
+        localx = localPos[0]
+        localy = localPos[1]
+        sum_num = sum_num + pxlhits[i].getEDep()*((cluster_posx-localx)*(cluster_posy-localy))
+        sum_den = sum_den + pxlhits[i].getEDep()
+
+    cov = (sum_num/sum_den)
+    return cov
+    
+def get_skew(cluster_pos, pxlhits, axis = ""):
+    rms = get_RMS(cluster_pos, pxlhits, axis)
+    sum_num = 0.
+    sum_den = 0.
+    local = 0.
+    skew = 0.
+    for i in range(0, len(pxlhits)):
+        hitConstituent = pxlhits[i]
+        localPos = hitConstituent.getPosition()
+        if axis=="x":
+            local = localPos[0]
+        else:
+            local = localPos[1]
+
+        sum_num = sum_num + pxlhits[i].getEDep()*((cluster_pos-local)**3)
+        sum_den = sum_den + pxlhits[i].getEDep()*(math.sqrt(rms)**3)
+
+    skew = (sum_num/sum_den)
+    return skew
+
 def get_theta(r, z):
     angle = math.atan2(r, z)
     return angle
@@ -63,7 +120,7 @@ def main():
 
     stem = in_file.stem #gets the name without extension                                                                                                                               
     in_ind = stem.removeprefix("output_digi_light_") #in_file.stem.split('_')[-1]                                                                                                      
-    out_dir = "/global/cfs/cdirs/atlas/arastogi/MuonCollider/CSA_wML/RunDNN/Inputs/Signal"
+    out_dir = "Inputs/Signal"
     out_file = f"{out_dir}/Hits_TTree_{in_ind}.root"
     tree_name = "HitTree"
     # Create a new ROOT file and TTree                                                                                                                                                 
@@ -81,6 +138,12 @@ def main():
     cluster_theta  = array('f', [0.])
     cluster_x_size   = array('f', [0.])
     cluster_y_size   = array('f', [0.])
+    cluster_rms_x   = array('f', [0.])
+    cluster_rms_y   = array('f', [0.])
+    cluster_skew_x   = array('f', [0.])
+    cluster_skew_y   = array('f', [0.])
+    cluster_aspect = array('f', [0.])
+    cluster_ecc = array('f', [0.])
 
     max_npix = ops.nhits
     pixelE = [array('f', [0.]) for _ in range(max_npix)]
@@ -99,6 +162,12 @@ def main():
     tree.Branch("Cluster_z", cluster_z, "Cluster_z/F")
     tree.Branch("Cluster_r", cluster_r, "Cluster_r/F")
     tree.Branch("Incident_Angle", cluster_theta, "Incident_Angle/F")
+    tree.Branch("Cluster_RMS_x", cluster_rms_x, "Cluster_RMS_x/F")
+    tree.Branch("Cluster_RMS_y", cluster_rms_y, "Cluster_RMS_y/F")
+    tree.Branch("Cluster_Skew_x", cluster_skew_x, "Cluster_Skew_x/F")
+    tree.Branch("Cluster_Skew_y", cluster_skew_y, "Cluster_Skew_y/F")
+    tree.Branch("Cluster_AspectRatio", cluster_aspect, "Cluster_AspectRatio/F")
+    tree.Branch("Cluster_Eccentricity", cluster_ecc, "Cluster_Eccentricity/F")
 
     reader = pyLCIO.IOIMPL.LCFactory.getInstance().createLCReader()
     reader.open(str(in_file))
@@ -144,7 +213,31 @@ def main():
                     cluster_size[0] = npix
                     cluster_x_size[0] = cluster_xhits
                     cluster_y_size[0] = cluster_yhits
+                    cluster_rms_x[0] = get_RMS(x_pos,pixelHits,"x")
+                    cluster_rms_y[0] = get_RMS(y_pos,pixelHits,"y")
+                    cluster_skew_x[0] = get_skew(x_pos,pixelHits,"x")
+                    cluster_skew_y[0] = get_skew(y_pos,pixelHits,"y")
+
+                    #computing eigenvalues of covariance matrix
+                    cluster_xy = get_cov(x_pos,y_pos,pixelHits)
+                    trace = cluster_rms_x[0]+cluster_rms_y[0]
+                    det = cluster_rms_x[0]*cluster_rms_y[0] - cluster_xy**2
+                    lambda1 = (trace + math.sqrt(trace**2 - 4*det)) / 2
+                    lambda2 = (trace - math.sqrt(trace**2 - 4*det)) / 2
                     
+                    if lambda1>=lambda2:
+                        if lambda2>0:
+                            cluster_aspect[0] = math.sqrt(lambda1/lambda2)
+                        else:
+                            cluster_aspect[0] = 0.
+                        cluster_ecc[0] = math.sqrt(1-(lambda2/lambda1))
+                    else:
+                        if lambda1>0:
+                            cluster_aspect[0] = math.sqrt(lambda2/lambda1)
+                        else:
+                            cluster_aspect[0] = 0.
+                        cluster_ecc[0] = math.sqrt(1-(lambda1/lambda2))
+                        
                     pixList = [pixelHits[i].getEDep() for i in range(pixelHits.size())]
                     nh = min(max_npix, len(pixList))
                     pixInd = np.argsort(pixList)[-nh:][::-1]
