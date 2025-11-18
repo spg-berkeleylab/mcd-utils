@@ -1,17 +1,22 @@
 #!/bin/bash
 
+# Settings
+USERNAME=${USER}
+pwd=${PWD}
+MCD_UTILS="/global/cfs/cdirs/atlas/${USERNAME}/mcd-utils/"
+
 # Source configuration file
-CONFIG_FILE="config.sh"
+CONFIG_FILE="${MCD_UTILS}/scripts/config.sh"
 tell "=====sourcing Config file====="
 if [[ -f "${CONFIG_FILE}" ]]; then
-    source "${CONFIG_FILE}"
+    source ${CONFIG_FILE}
 else
     echo "Configuration file not found: ${CONFIG_FILE}"
     exit 1
 fi
 
 # Utility functions sourced
-tell "=====sourcing Utility functions======"
+echo "=====sourcing Utility functions======"
 source ${MCD_UTILS}/scripts/utils.sh
 
 random_postfix=$(echo $RANDOM | md5sum | head -c 6)
@@ -37,7 +42,8 @@ elif [ ${RUN_TYPE} == "sim" ]; then
 elif [ ${RUN_TYPE} == "digi" ]; then
     
     tell "=====Running Event Digitization without BIB====="
-    time k4run ${BENCHMARKS}/digitisation/k4run/digi_steer.py --LcioEvent.Files ${IN_FILE}.slcio --OutputDigiFileName ${OUT_FILE_PREFIX}.slcio --nEvents ${NEVENTS} &> ${OUT_FILE_PREFIX}.log
+    #time k4run ${BENCHMARKS}/digitisation/k4run/digi_steer.py --LcioEvent.Files ${IN_FILE}.slcio --OutputDigiFileName ${OUT_FILE_PREFIX}.slcio --nEvents ${NEVENTS} &> ${OUT_FILE_PREFIX}.log
+    time k4run /global/cfs/cdirs/atlas/rbgarg/MuonCollider/TrkHitsStudiesWorkspace/configs/digi_steer.py --LcioEvent.Files ${IN_FILE}.slcio --doTrkDigiSimple -n 10000 --writeAll &> ${OUT_FILE_PREFIX}.log
     tell "=====Digitization without BIB DONE!!"
     
 elif [ ${RUN_TYPE} == "digi_withBIB" ]; then

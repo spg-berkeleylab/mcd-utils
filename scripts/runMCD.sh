@@ -1,13 +1,13 @@
 #!/bin/bash
 
-runType="reco" #"gen", "sim", "digi", "digi_withBIB", "reco", "reco_withBIB"
+runType="gen" #"gen", "sim", "digi", "digi_withBIB", "reco", "reco_withBIB"
 echo "RunType = $runType"
 
 #Gen-parameters
-nEvts=10
+nEvts=1
 nPar_per_Evt=1
-ptmin=10
-ptmax=100
+ptmin=100
+ptmax=1000
 pdg=13
 #digi-parameters
 overlay_numBkg=2 #19, 100, 192 (BIB:1%, 10%, 50%, 100%)
