@@ -5,7 +5,7 @@
 # 2.9.7 (default) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-alma9:v2.9.7 
 # full_gaudi_test (Ubuntu image with full native gaudi-based algorithms) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:full_gaudi_test
 # full_gaudi_acts_next (ACTS v43) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:full_gaudi_acts_next
-# full_gaudi_main (Ubuntu image with full native gaudi-based algorithms) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:main
+# full_gaudi_main (Ubuntu image with full native gaudi-based algorithms) -- docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:v3.0
 # main -- docker:gitlab-registry.cern.ch/muon-collider/muoncollider-docker/mucoll-sim:master-alma9
 #
 # Deprecated images (not supported anymore):
@@ -56,7 +56,7 @@ case ${IMAGE_SHORT} in
       ;;
    "full_gaudi_main")
       IMAGE_SHORT="full_gaudi_main"
-      IMAGE="docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:main"
+      IMAGE="docker:ghcr.io/muoncollidersoft/mucoll-sim-ubuntu24:v3.0"
       ;;
    "full_gaudi_acts_next")
       IMAGE_SHORT="full_gaudi_acts_next"
